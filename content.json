@@ -1,0 +1,108 @@
+{
+  "settings": {
+    "report_form_url": "#"
+  },
+  "alerts": [
+    {
+      "hazard": "flood",
+      "severity": "yellow",
+      "district": "Bengaluru Urban",
+      "title": {
+        "en": "Waterlogging possible in low-lying areas",
+        "hi": "निचले क्षेत्रों में जलभराव संभव"
+      },
+      "body": {
+        "en": "Avoid underpasses. Stay clear of storm drains.",
+        "hi": "अंडरपास से बचें। नालों से दूर रहें।"
+      },
+      "timestamp": "2025-08-15T12:39:40.918934"
+    },
+    {
+      "hazard": "cyclone",
+      "severity": "orange",
+      "district": "Puri",
+      "title": {
+        "en": "Cyclone likely to make landfall in 36 hours",
+        "hi": "36 घंटों में चक्रवात की संभावित लैंडफॉल"
+      },
+      "body": {
+        "en": "Fishermen advised not to venture into sea.",
+        "hi": "मछुआरों को समुद्र में न जाने की सलाह।"
+      },
+      "timestamp": "2025-08-15T12:39:40.918941"
+    },
+    {
+      "hazard": "heatwave",
+      "severity": "orange",
+      "district": "Prayagraj",
+      "title": {
+        "en": "Severe heatwave (Orange)",
+        "hi": "भीषण लू (नारंगी)"
+      },
+      "body": {
+        "en": "Limit outdoor work 12–4 PM.",
+        "hi": "दोपहर 12–4 बजे बाहरी काम सीमित करें।"
+      },
+      "timestamp": "2025-08-15T12:39:40.918943"
+    }
+  ],
+  "guides": [
+    {
+      "hazard": "flood",
+      "level": "Household",
+      "title": {
+        "en": "Flood Safety Checklist",
+        "hi": "बाढ़ सुरक्षा चेकलिस्ट"
+      },
+      "summary": {
+        "en": "Steps before, during, after.",
+        "hi": "पहले, दौरान, बाद में कदम।"
+      },
+      "url": "#"
+    },
+    {
+      "hazard": "heatwave",
+      "level": "Community",
+      "title": {
+        "en": "Heat Action Plan Template",
+        "hi": "हीट एक्शन प्लान टेम्पलेट"
+      },
+      "summary": {
+        "en": "Ward-level actions.",
+        "hi": "वार्ड-स्तरीय कार्य।"
+      },
+      "url": "#"
+    }
+  ],
+  "contacts": [
+    {
+      "name": "State Control Room",
+      "phone": "1070",
+      "notes": "24x7"
+    },
+    {
+      "name": "District Control Room",
+      "phone": "1077",
+      "notes": "District-specific"
+    }
+  ],
+  "shelters": [
+    {
+      "name": "Govt. School #3",
+      "address": "Ward 12, Main Road",
+      "capacity": 250
+    }
+  ],
+  "press": [
+    {
+      "title": "Rainfall update 08:00 hrs",
+      "date": "2025-08-15",
+      "url": "#"
+    },
+    {
+      "title": "Reservoir discharge advisory",
+      "date": "2025-08-15",
+      "url": "#"
+    }
+  ]
+}
