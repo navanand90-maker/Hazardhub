@@ -25,3 +25,4 @@ async function loadTicker(){
 }
 document.addEventListener('DOMContentLoaded', loadTicker);
 </script>
+<script src="script.js"></script>
