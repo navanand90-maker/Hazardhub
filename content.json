@@ -106,3 +106,97 @@
     }
   ]
 }
+{
+  "type": "module",
+  "dependencies": {
+    "@netlify/functions": "^2.0.0",
+    "@netlify/blobs": "^6.0.0"
+  }
+}
+[functions]
+  node_bundler = "esbuild"
+
+# run every 3 hours at minute 5 (UTC)
+[[scheduled.functions]]
+  name = "fetch_news"
+  cron = "5 */3 * * *"
+
+# expose our news JSON at /api/news
+[[edge_functions]]
+  function = "serve_news"
+  path = "/api/news"
+import { getStore } from '@netlify/blobs';
+
+const RW_URL = 'https://api.reliefweb.int/v1/reports?appname=hazardhub&profile=list&preset=latest&limit=20';
+const RW_IN  = '&country=122'; // India
+const GDACS_FEED = 'https://www.gdacs.org/xml/rss.xml';
+const USGS_FEED  = 'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/significant_day.geojson';
+
+async function reliefweb(url){
+  const j = await (await fetch(url)).json();
+  return (j.data||[]).map(({id, fields}) => ({
+    id:`rw-${id}`, source:'ReliefWeb', title:fields.title, url:fields.url,
+    date: fields.date?.changed || fields.date?.created,
+    country: (fields.country||[]).map(c=>c.name).join(', '),
+    image: fields.primary_image?.url || fields.thumbnail?.url || null
+  }));
+}
+async function gdacs(){
+  const xml = await (await fetch(GDACS_FEED)).text();
+  return [...xml.matchAll(/<item>([\\s\\S]*?)<\\/item>/g)].slice(0,15).map((m,i)=>{
+    const s = m[1];
+    return {
+      id:`gdacs-${i}-${Date.now()}`, source:'GDACS',
+      title:(s.match(/<title><!\\[CDATA\\[(.*?)\\]\\]><\\/title>/)||[])[1]||'GDACS alert',
+      url:(s.match(/<link>(.*?)<\\/link>/)||[])[1]||'https://www.gdacs.org/',
+      date:(s.match(/<pubDate>(.*?)<\\/pubDate>/)||[])[1]||new Date().toISOString(),
+      country:'', image:null
+    };
+  });
+}
+async function usgs(){
+  const j = await (await fetch(USGS_FEED)).json();
+  return (j.features||[]).map(f=>({
+    id:`usgs-${f.id}`, source:'USGS', title:f.properties.title, url:f.properties.url,
+    date:new Date(f.properties.time).toISOString(), country:f.properties.place, image:null
+  }));
+}
+
+export async function aggregateNews(){
+  const [inIndia, global, g, q] = await Promise.all([
+    reliefweb(RW_URL + RW_IN), reliefweb(RW_URL), gdacs(), usgs()
+  ]);
+  return [...inIndia, ...global, ...g, ...q]
+    .sort((a,b)=>new Date(b.date)-new Date(a.date))
+    .slice(0,60);
+}
+export async function saveNews(items){
+  const store = getStore({ name: 'hazardhub-news' });
+  await store.set('latest.json', new Blob([JSON.stringify({ updatedAt:new Date().toISOString(), items }, null, 2)], { type:'application/json' }));
+}
+import { schedule } from '@netlify/functions';
+import { aggregateNews, saveNews } from './_news-lib.js';
+
+export const handler = schedule('*/180 * * * *', async () => {
+  const items = await aggregateNews();
+  await saveNews(items);
+  return { statusCode: 200, body: 'ok' };
+});
+import { aggregateNews, saveNews } from './_news-lib.js';
+
+export async function handler(event) {
+  if (process.env.ADMIN_TOKEN && event.queryStringParameters.token !== process.env.ADMIN_TOKEN) {
+    return { statusCode: 401, body: 'unauthorized' };
+  }
+  const items = await aggregateNews();
+  await saveNews(items);
+  return { statusCode: 200, body: 'refreshed' };
+}
+import { getStore } from '@netlify/blobs';
+
+export default async () => {
+  const store = getStore({ name: 'hazardhub-news' });
+  const blob = await store.get('latest.json');
+  const body = blob ? await blob.text() : JSON.stringify({ updatedAt:null, items:[] });
+  return new Response(body, { headers: { 'content-type':'application/json', 'cache-control':'public, max-age=300, stale-while-revalidate=600' } });
+};
