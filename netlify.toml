@@ -1,0 +1,53 @@
+[build]
+  command = "npm run build || echo 'no build step'"
+  publish = "dist"
+
+[functions]
+  node_bundler = "esbuild"
+  directory = "netlify/functions"
+
+[[scheduled.functions]]
+  name = "refresh_news"
+  cron = "0 */2 * * *"
+
+[[scheduled.functions]]
+  name = "refresh_alerts"
+  cron = "15 */2 * * *"
+
+[[scheduled.functions]]
+  name = "refresh_research"
+  cron = "30 */2 * * *"
+
+[[redirects]]
+  from = "/api/news"
+  to   = "/.netlify/functions/news"
+  status = 200
+
+[[redirects]]
+  from = "/api/alerts"
+  to   = "/.netlify/functions/alerts"
+  status = 200
+
+[[redirects]]
+  from = "/api/weather"
+  to   = "/.netlify/functions/weather"
+  status = 200
+
+[[redirects]]
+  from = "/api/research"
+  to   = "/.netlify/functions/research"
+  status = 200
+
+[[headers]]
+  for = "/api/*"
+  [headers.values]
+    Cache-Control = "public, max-age=300"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Strict-Transport-Security = "max-age=63072000; includeSubDomains; preload"
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Content-Security-Policy = "default-src 'self' https: 'unsafe-inline' 'unsafe-eval' data: blob:;"
