@@ -1,42 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>HazardHub</title>
 <style>
-.news-ticker{position:relative;overflow:hidden;background:linear-gradient(90deg,#0b1221,#0f172a);border-top:1px solid #22304a;border-bottom:1px solid #22304a}
-.ticker-track{display:flex;gap:1rem;padding:.5rem .75rem;animation:marquee 50s linear infinite}
-.ticker-card{display:flex;gap:.5rem;align-items:center;padding:.25rem .75rem;background:#0f1a2e;border:1px solid #22304a;border-radius:.5rem;white-space:nowrap;text-decoration:none;color:#e2e8f0}
-.ticker-card img{width:56px;height:36px;object-fit:cover;border-radius:.25rem}
-@keyframes marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
-@media (prefers-reduced-motion:reduce){.ticker-track{animation:none}}
+:root { --g1:#0f172a; --g2:#0b3b5a; --g3:#0b5a4a; --fg:#f1f5f9; }
+* { box-sizing: border-box; }
+body {
+  margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+  color:var(--fg);
+  min-height:100vh;
+  background: linear-gradient(120deg, var(--g1), var(--g2), var(--g3));
+  background-size:200% 200%;
+  animation: gradientShift 20s ease infinite;
+}
+@keyframes gradientShift { 0%{background-position:0% 0%} 50%{background-position:100% 50%} 100%{background-position:0% 0%} }
+.container { max-width:1100px; margin: 0 auto; padding: 24px; }
+h1 { margin:0 0 8px; font-weight:700; letter-spacing:.2px; }
+.muted { opacity:.85; margin: 0 0 24px; }
+
+.card {
+  background: rgba(15,23,42,.55);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.2);
+}
+
+.grid { display:grid; gap:16px; grid-template-columns: repeat(auto-fit, minmax(260px,1fr)); }
+
+.ticker {
+  overflow:hidden; white-space:nowrap;
+  border-top:1px solid rgba(255,255,255,.1);
+  border-bottom:1px solid rgba(255,255,255,.1);
+  background: rgba(255,255,255,.06); backdrop-filter: blur(6px);
+  margin: 12px 0 24px;
+}
+.ticker-track { display:inline-block; padding:.6rem 0; animation: scroll-left 40s linear infinite; }
+.ticker-item { display:inline-block; margin-right:2rem; }
+.ticker-item a { color: var(--fg); text-decoration: none; }
+@keyframes scroll-left { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
+
+ul { list-style:none; padding:0; margin: 8px 0 0; }
+li { margin: 8px 0; }
+a { color:#c8e8ff; }
+small { opacity:.8; }
+
+.footer { opacity:.7; font-size:12px; margin-top:24px; text-align:center; }
 </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>HazardHub</h1>
+      <p class="muted">Live disaster news, weather, alerts & research — auto-updated every 2 hours.</p>
+    </header>
 
-<section class="news-ticker" aria-label="Latest disaster news">
-  <div class="ticker-track" id="newsTrack" aria-live="polite"></div>
-</section>
+    <!-- Scrolling News Ticker -->
+    <section class="ticker card">
+      <div id="ticker-track" class="ticker-track">Sample headline — this will scroll once backend is live.</div>
+    </section>
 
-<script>
-(async function loadTicker(){
-  const el = document.getElementById('newsTrack');
-  try {
-    const res = await fetch("https://api.reliefweb.int/v1/reports?appname=hazardhub&profile=list&preset=latest&limit=12");
-    const data = await res.json();
-    const items = (data.data||[]).map(x => ({
-      title: x.fields.title,
-      url: x.fields.url,
-      image: x.fields?.primary_image?.url || x.fields?.thumbnail?.url || null
-    }));
-    el.innerHTML = '';
-    const make = n => {
-      const a = document.createElement('a');
-      a.href = n.url; a.target = '_blank'; a.rel = 'noopener'; a.className = 'ticker-card';
-      a.innerHTML = (n.image ? `<img src="${n.image}" alt="">` : '') + `<span>${n.title}</span>`;
-      return a;
-    };
-    const cards = items.map(make);
-    [...cards, ...cards].forEach(c => el.appendChild(c)); // duplicate for smooth loop
-  } catch (e) {
-    el.innerHTML = '<span style="color:#94a3b8">Unable to load latest news right now.</span>';
-  }
-})();
-</script>
-<section class="news-ticker" aria-label="Latest disaster news">
-  <div class="ticker-track" id="newsTrack" aria-live="polite"></div>
-</section>
-<!doctype html><html lang='en'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'><title>Disaster Portal</title><link rel='icon' href='assets/icon.png'><link rel='manifest' href='manifest.webmanifest'><link rel='stylesheet' href='styles.css'></head><body><header class='site-header'><div class='brand'><img src='assets/icon.png' alt='' class='logo'><div><h1>Disaster Portal</h1><p class='tagline'>Timely alerts · Clear guidance · Local resources</p></div></div><div class='actions'><button id='langToggle' class='btn' aria-label='Toggle language'>EN/HI</button><button id='themeToggle' class='btn' aria-label='Toggle theme'>🌓</button><button id='shareBtn' class='btn' aria-label='Share'><span>Share</span></button></div></header><nav class='toolbar' aria-label='Filters'><div class='filters'><label><span>Hazard</span><select id='hazard'><option value='all' selected>All</option><option value='flood'>Flood</option><option value='cyclone'>Cyclone</option><option value='heatwave'>Heatwave</option><option value='earthquake'>Earthquake</option><option value='landslide'>Landslide</option><option value='lightning'>Lightning</option></select></label><label><span>District</span><input id='district' type='search' placeholder='Search district…'></label><label><span>Severity</span><select id='severity'><option value='all'>All</option><option value='advisory'>Advisory</option><option value='yellow'>Yellow</option><option value='orange'>Orange</option><option value='red'>Red</option></select></label><label><span>Sort</span><select id='sort'><option value='newest'>Newest first</option><option value='oldest'>Oldest first</option><option value='severity'>Severity</option></select></label><button id='clear' class='btn subtle'>Clear</button></div><div id='status' class='status' aria-live='polite'></div></nav><main id='main'><section aria-labelledby='alertsTitle' class='block'><h2 id='alertsTitle'>Live Alerts</h2><div id='alerts' class='cards' role='feed' aria-busy='true'></div><div class='pager'><button id='prevPage' class='btn subtle' disabled>Prev</button><span id='pageInfo' class='muted'></span><button id='nextPage' class='btn subtle' disabled>Next</button></div></section><section aria-labelledby='guidesTitle' class='block'><h2 id='guidesTitle'>Guides & SOPs</h2><div id='guides' class='cards'></div></section><section aria-labelledby='mapTitle' class='block grid2'><div><h2 id='mapTitle'>Local Maps</h2><div class='map'><iframe title='Open Map' src='https://www.openstreetmap.org/export/embed.html?bbox=77.5%2C12.8%2C77.8%2C13.1&layer=mapnik' loading='lazy'></iframe></div><p class='muted'>Replace with state EOC dashboard / radar / reservoir status or your GIS web map.</p></div><div><h3>Shelters & Relief Points</h3><ul id='shelters' class='list'></ul></div></section><section aria-labelledby='reportTitle' class='block grid2'><div><h2 id='reportTitle'>Report an Issue</h2><p>Use this form to report blocked roads, damages, missing persons, or urgent needs.</p><a id='reportForm' class='btn primary' href='#' target='_blank' rel='noopener'>Open Report Form</a><p class='muted'>Admins can route submissions to control rooms via email/SMS.</p></div><div><h3>Emergency Contacts</h3><ul id='contacts' class='list'></ul></div></section><section aria-labelledby='mediaTitle' class='block grid2'><div><h2 id='mediaTitle'>Press & Updates</h2><ul id='press' class='list'></ul></div><div><h3>FAQs</h3><details><summary>How are alerts verified?</summary><p>Alerts are curated by admins from official sources and carry a timestamp.</p></details><details><summary>How do I volunteer?</summary><p>Check the Guides section for volunteer SOPs and register via the report form.</p></details></div></section></main><footer class='site-footer'><p><strong>Disclaimer:</strong> This site is for public awareness. Follow official government advisories at all times.</p><p class='muted'>© <span id='year'></span> Disaster Portal • <a href='admin.html'>Admin</a></p></footer><script src='script.js'></script></body></html>
+    <!-- Weather -->
+    <section id="weather" class="card">
+      <h3>Local Weather</h3>
+      <p>Sample 25°C – 30°C | 🌧 2 mm</p>
+    </section>
+
+    <!-- Alerts + Research -->
+    <section class="grid" style="margin-top:16px;">
+      <div class="card">
+        <h3>Regional & Global Alerts</h3>
+        <ul id="alerts-list"><li>Sample alert item</li></ul>
+      </div>
+      <div class="card">
+        <h3>Recent Research</h3>
+        <ul id="research-list"><li>Sample research item</li></ul>
+      </div>
+    </section>
+
+    <p class="footer">Made for hazardhub.net • Data sources: GDACS, ReliefWeb, Open-Meteo, Nature & others.</p>
+  </div>
+</body>
+</html>
